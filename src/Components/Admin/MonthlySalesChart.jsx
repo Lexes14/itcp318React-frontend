@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../config.js";
 import {
   LineChart,
   Line,
@@ -19,7 +20,7 @@ const MonthlySalesChart = () => {
         Object.entries(range).filter(([, value]) => value),
       );
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/admin/sales-per-month?${query}`,
+        `${API_URL}/admin/sales-per-month?${query}`,
         { headers: { Authorization: `Bearer ${getToken()}` } },
       );
       setData(response.data.data || []);

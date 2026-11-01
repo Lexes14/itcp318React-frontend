@@ -2,8 +2,10 @@ const getStored = (key, fallback) => {
   if (typeof globalThis === "undefined" || !globalThis.localStorage)
     return fallback;
   try {
+    const value = globalThis.localStorage.getItem(key);
+    if (!value || value === "undefined") return fallback;
     return JSON.parse(
-      globalThis.localStorage.getItem(key) || JSON.stringify(fallback),
+      value,
     );
   } catch {
     return fallback;

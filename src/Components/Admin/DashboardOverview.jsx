@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../config.js";
 import { errMsg, getToken } from "../../Utils/helpers.jsx";
 
-const api = import.meta.env.VITE_API_URL;
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
 
 const DashboardOverview = () => {
@@ -19,10 +19,10 @@ const DashboardOverview = () => {
       try {
         const [productsResponse, usersResponse, ordersResponse, salesResponse] =
           await Promise.allSettled([
-            axios.get(`${api}/admin/products`, config()),
-            axios.get(`${api}/admin/users`, config()),
-            axios.get(`${api}/admin/total-orders`, config()),
-            axios.get(`${api}/admin/total-sales`, config()),
+            axios.get(`${API_URL}/admin/products`, config()),
+            axios.get(`${API_URL}/admin/users`, config()),
+            axios.get(`${API_URL}/admin/total-orders`, config()),
+            axios.get(`${API_URL}/admin/total-sales`, config()),
           ]);
         const products =
           productsResponse.status === "fulfilled"

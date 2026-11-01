@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 import { productSchema, validate } from "../../Utils/validation.js";
 
-const api = import.meta.env.VITE_API_URL;
 const UpdateProduct = ({ product, onSaved, onCancel }) => {
   const [form, setForm] = useState(product);
   const [images, setImages] = useState([]);
@@ -18,7 +18,7 @@ const UpdateProduct = ({ product, onSaved, onCancel }) => {
   const removeImage = async (image) => {
     try {
       await axios.delete(
-        `${api}/admin/product/${product._id}/image/${image._id}`,
+        `${API_URL}/admin/product/${product._id}/image/${image._id}`,
         { headers: { Authorization: `Bearer ${getToken()}` } },
       );
       setForm((current) => ({
@@ -69,7 +69,7 @@ const UpdateProduct = ({ product, onSaved, onCancel }) => {
           );
       });
       Array.from(images).forEach((image) => payload.append("images", image));
-      await axios.put(`${api}/admin/product/${product._id}`, payload, {
+      await axios.put(`${API_URL}/admin/product/${product._id}`, payload, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       successMsg("Product updated");

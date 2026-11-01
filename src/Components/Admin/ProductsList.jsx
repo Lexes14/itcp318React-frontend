@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 
-const api = import.meta.env.VITE_API_URL;
 const authConfig = () => ({
   headers: { Authorization: `Bearer ${getToken()}` },
 });
@@ -15,7 +15,7 @@ const ProductsList = ({ onCreate, onEdit, refreshKey = 0 }) => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${api}/admin/products`, authConfig());
+      const { data } = await axios.get(`${API_URL}/admin/products`, authConfig());
       setProducts(data.products || []);
       setSelected([]);
     } catch (error) {
@@ -60,7 +60,7 @@ const ProductsList = ({ onCreate, onEdit, refreshKey = 0 }) => {
   const removeProduct = async (id) => {
     if (!window.confirm("Delete this product?")) return;
     try {
-      await axios.delete(`${api}/admin/product/${id}`, authConfig());
+      await axios.delete(`${API_URL}/admin/product/${id}`, authConfig());
       setProducts((current) => current.filter((product) => product._id !== id));
       successMsg("Product deleted");
     } catch (error) {
@@ -74,7 +74,7 @@ const ProductsList = ({ onCreate, onEdit, refreshKey = 0 }) => {
     )
       return;
     try {
-      await axios.delete(`${api}/admin/products/bulk`, {
+      await axios.delete(`${API_URL}/admin/products/bulk`, {
         ...authConfig(),
         data: { ids: selected },
       });

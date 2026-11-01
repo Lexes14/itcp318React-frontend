@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 
-const api = import.meta.env.VITE_API_URL;
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
 const UsersList = () => {
   const [users, setUsers] = useState([]);
   const [editing, setEditing] = useState(null);
   const load = async () => {
     try {
-      const { data } = await axios.get(`${api}/admin/users`, config());
+      const { data } = await axios.get(`${API_URL}/admin/users`, config());
       setUsers(data.users || []);
     } catch (error) {
       errMsg(error);
@@ -21,7 +21,7 @@ const UsersList = () => {
   const save = async (user) => {
     try {
       const { data } = await axios.put(
-        `${api}/admin/user/${user._id}`,
+        `${API_URL}/admin/user/${user._id}`,
         { name: user.name, email: user.email, role: user.role },
         config(),
       );
@@ -37,7 +37,7 @@ const UsersList = () => {
   const remove = async (id) => {
     if (!window.confirm("Delete this user?")) return;
     try {
-      await axios.delete(`${api}/admin/user/${id}`, config());
+      await axios.delete(`${API_URL}/admin/user/${id}`, config());
       setUsers((current) => current.filter((user) => user._id !== id));
       successMsg("User deleted");
     } catch (error) {

@@ -3,14 +3,20 @@ import { onIdTokenChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase.js";
 export const authenticate = (data) => {
   if (typeof window !== "undefined") {
-    sessionStorage.setItem("userAuthBearer", data.token);
-    sessionStorage.setItem("user", JSON.stringify(data.user));
+    if (data?.token) sessionStorage.setItem("userAuthBearer", data.token);
+    if (data?.user) sessionStorage.setItem("user", JSON.stringify(data.user));
   }
 };
 export const getUser = () => {
-  if (typeof window !== "undefined")
-    return JSON.parse(sessionStorage.getItem("user") || "null");
-  return null;
+  if (typeof window === "undefined") return null;
+  try {
+    const value = sessionStorage.getItem("user");
+    if (!value || value === "undefined") return null;
+    return JSON.parse(value);
+  } catch {
+    sessionStorage.removeItem("user");
+    return null;
+  }
 };
 export const getToken = () => {
   if (typeof window !== "undefined")

@@ -1,6 +1,6 @@
 import axios from "axios";
+import { API_URL } from "../config.js";
 
-const api = import.meta.env.VITE_API_URL;
 export const productsRequest = () => ({ type: "PRODUCTS_REQUEST" });
 export const productsSuccess = (payload) => ({
   type: "PRODUCTS_SUCCESS",
@@ -21,7 +21,7 @@ export const getProducts =
     dispatch(productsRequest());
     try {
       const { data } = await axios.get(
-        `${api}/products${query ? `?${query}` : ""}`,
+        `${API_URL}/products${query ? `?${query}` : ""}`,
         requestConfig,
       );
       dispatch(append ? productsAppend(data) : productsSuccess(data));

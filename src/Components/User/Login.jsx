@@ -7,6 +7,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import axios from "axios";
+import { API_URL } from "../../config.js";
 import { auth } from "../../firebase.js";
 import { authenticate, errMsg, successMsg } from "../../Utils/helpers.jsx";
 import { loginSchema, validate } from "../../Utils/validation.js";
@@ -26,7 +27,7 @@ const Login = () => {
     const token = await credential.user.getIdToken();
     const config = { headers: { Authorization: `Bearer ${token}` } };
     const { data } = await axios.post(
-      `${import.meta.env.VITE_API_URL}/users/sync`,
+      `${API_URL}/users/sync`,
       {
         name:
           credential.user.displayName || credential.user.email.split("@")[0],

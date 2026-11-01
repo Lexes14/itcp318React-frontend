@@ -1,7 +1,7 @@
 import axios from "axios";
+import { API_URL } from "../config.js";
 import { getToken } from "../Utils/helpers.jsx";
 
-const api = import.meta.env.VITE_API_URL;
 export const orderCreateRequest = () => ({ type: "ORDER_CREATE_REQUEST" });
 export const orderCreateSuccess = (order) => ({
   type: "ORDER_CREATE_SUCCESS",
@@ -15,7 +15,7 @@ export const orderCreateFail = (message) => ({
 export const createOrder = (orderData) => async (dispatch) => {
   dispatch(orderCreateRequest());
   try {
-    const { data } = await axios.post(`${api}/order/new`, orderData, {
+    const { data } = await axios.post(`${API_URL}/order/new`, orderData, {
       headers: { Authorization: `Bearer ${getToken()}` },
     });
     dispatch(orderCreateSuccess(data.order));
