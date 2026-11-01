@@ -183,6 +183,41 @@
   border-radius: 5px;
   background: #fff;
 }
+.product-reviews {
+  margin-top: 32px;
+}
+.product-reviews-head,
+.product-review-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.product-reviews-head h2 {
+  margin: 8px 0 4px;
+}
+.product-reviews-head p {
+  margin: 0;
+}
+.product-review-summary,
+.product-review-rating {
+  color: var(--amber);
+  white-space: nowrap;
+}
+.product-review-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+.product-review {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.product-review p {
+  margin: 8px 0 0;
+  color: #334155;
+  line-height: 1.6;
+}
 .category {
   border: 0;
   background: none;

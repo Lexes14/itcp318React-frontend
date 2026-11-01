@@ -4,6 +4,7 @@ import axios from "axios";
 import { API_BASE } from "../../config.js";
 import { errMsg } from "../../Utils/helpers.jsx";
 import Loader from "../Layout/Loader.jsx";
+import ListReviews from "../Review/ListReviews.jsx";
 import "./ProductMedia.css";
 
 const ProductDetails = ({ addItemToCart }) => {
@@ -181,6 +182,11 @@ const ProductDetails = ({ addItemToCart }) => {
           {runtime ? `≈ ${runtime} minutes` : "Enter a valid load"}
         </div>
       </section>
+      <ListReviews
+        reviews={product.reviews}
+        averageRating={product.ratings}
+        reviewCount={product.numOfReviews}
+      />
     </main>
   );
 };
