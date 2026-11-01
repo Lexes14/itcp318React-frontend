@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 import { productSchema, validate } from "../../Utils/validation.js";
 
@@ -18,7 +18,7 @@ const UpdateProduct = ({ product, onSaved, onCancel }) => {
   const removeImage = async (image) => {
     try {
       await axios.delete(
-        `${API_URL}/admin/product/${product._id}/image/${image._id}`,
+        `${API_BASE}/admin/product/${product._id}/image/${image._id}`,
         { headers: { Authorization: `Bearer ${getToken()}` } },
       );
       setForm((current) => ({
@@ -69,7 +69,7 @@ const UpdateProduct = ({ product, onSaved, onCancel }) => {
           );
       });
       Array.from(images).forEach((image) => payload.append("images", image));
-      await axios.put(`${API_URL}/admin/product/${product._id}`, payload, {
+      await axios.put(`${API_BASE}/admin/product/${product._id}`, payload, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       successMsg("Product updated");

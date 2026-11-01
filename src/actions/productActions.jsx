@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL } from "../config.js";
+import { API_BASE } from "../config.js";
 
 export const productsRequest = () => ({ type: "PRODUCTS_REQUEST" });
 export const productsSuccess = (payload) => ({
@@ -21,7 +21,7 @@ export const getProducts =
     dispatch(productsRequest());
     try {
       const { data } = await axios.get(
-        `${API_URL}/products${query ? `?${query}` : ""}`,
+        `${API_BASE}/products${query ? `?${query}` : ""}`,
         requestConfig,
       );
       dispatch(append ? productsAppend(data) : productsSuccess(data));

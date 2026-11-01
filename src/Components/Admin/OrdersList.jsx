@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
@@ -16,7 +16,7 @@ const OrdersList = () => {
   const [orders, setOrders] = useState([]);
   const load = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/admin/orders`, config());
+      const { data } = await axios.get(`${API_BASE}/admin/orders`, config());
       setOrders(data.orders || []);
     } catch (error) {
       errMsg(error);
@@ -28,7 +28,7 @@ const OrdersList = () => {
   const updateStatus = async (id, status) => {
     try {
       const { data } = await axios.put(
-        `${API_URL}/admin/order/${id}`,
+        `${API_BASE}/admin/order/${id}`,
         { status },
         config(),
       );
@@ -44,7 +44,7 @@ const OrdersList = () => {
   const remove = async (id) => {
     if (!window.confirm("Delete this order?")) return;
     try {
-      await axios.delete(`${API_URL}/admin/order/${id}`, config());
+      await axios.delete(`${API_BASE}/admin/order/${id}`, config());
       setOrders((current) => current.filter((order) => order._id !== id));
       successMsg("Order deleted");
     } catch (error) {

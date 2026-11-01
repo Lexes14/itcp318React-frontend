@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
@@ -10,7 +10,7 @@ const ProductReviews = () => {
   const [loading, setLoading] = useState(true);
   const load = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/admin/reviews`, config());
+      const { data } = await axios.get(`${API_BASE}/admin/reviews`, config());
       setReviews(data.reviews || []);
     } catch (error) {
       errMsg(error);
@@ -24,7 +24,7 @@ const ProductReviews = () => {
   const remove = async (review) => {
     if (!window.confirm("Delete this review?")) return;
     try {
-      await axios.delete(`${API_URL}/reviews`, {
+      await axios.delete(`${API_BASE}/reviews`, {
         ...config(),
         data: { productId: review.productId, id: review._id },
       });

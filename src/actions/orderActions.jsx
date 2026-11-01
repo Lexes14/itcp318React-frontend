@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL } from "../config.js";
+import { API_BASE } from "../config.js";
 import { getToken } from "../Utils/helpers.jsx";
 
 export const orderCreateRequest = () => ({ type: "ORDER_CREATE_REQUEST" });
@@ -15,7 +15,7 @@ export const orderCreateFail = (message) => ({
 export const createOrder = (orderData) => async (dispatch) => {
   dispatch(orderCreateRequest());
   try {
-    const { data } = await axios.post(`${API_URL}/order/new`, orderData, {
+    const { data } = await axios.post(`${API_BASE}/order/new`, orderData, {
       headers: { Authorization: `Bearer ${getToken()}` },
     });
     dispatch(orderCreateSuccess(data.order));

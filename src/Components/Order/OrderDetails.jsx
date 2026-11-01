@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken } from "../../Utils/helpers.jsx";
 
 const OrderDetails = () => {
@@ -9,7 +9,7 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   useEffect(() => {
     axios
-      .get(`${API_URL}/order/${id}`, {
+      .get(`${API_BASE}/order/${id}`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       })
       .then(({ data }) => setOrder(data.order))

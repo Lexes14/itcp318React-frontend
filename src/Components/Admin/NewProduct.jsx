@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 import { productSchema, validate } from "../../Utils/validation.js";
 
@@ -54,7 +54,7 @@ const NewProduct = ({ onSaved, onCancel }) => {
       const body = new FormData();
       Object.entries(form).forEach(([key, value]) => body.append(key, value));
       Array.from(images).forEach((image) => body.append("images", image));
-      await axios.post(`${API_URL}/admin/product/new`, body, {
+      await axios.post(`${API_BASE}/admin/product/new`, body, {
         headers: { ...{ Authorization: `Bearer ${getToken()}` } },
       });
       successMsg("Product created");

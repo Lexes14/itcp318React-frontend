@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken } from "../../Utils/helpers.jsx";
 
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
@@ -19,10 +19,10 @@ const DashboardOverview = () => {
       try {
         const [productsResponse, usersResponse, ordersResponse, salesResponse] =
           await Promise.allSettled([
-            axios.get(`${API_URL}/admin/products`, config()),
-            axios.get(`${API_URL}/admin/users`, config()),
-            axios.get(`${API_URL}/admin/total-orders`, config()),
-            axios.get(`${API_URL}/admin/total-sales`, config()),
+            axios.get(`${API_BASE}/admin/products`, config()),
+            axios.get(`${API_BASE}/admin/users`, config()),
+            axios.get(`${API_BASE}/admin/total-orders`, config()),
+            axios.get(`${API_BASE}/admin/total-sales`, config()),
           ]);
         const products =
           productsResponse.status === "fulfilled"

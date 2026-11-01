@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 import "./Profile.css";
 import { profileSchema, validate } from "../../Utils/validation.js";
@@ -22,7 +22,7 @@ const Profile = () => {
   const config = { headers: { Authorization: `Bearer ${getToken()}` } };
   useEffect(() => {
     axios
-      .get(`${API_URL}/me`, config)
+      .get(`${API_BASE}/me`, config)
       .then(({ data }) => {
         setUser(data.user);
         setName(data.user.name || "");
@@ -50,7 +50,7 @@ const Profile = () => {
       form.append("name", name);
       if (avatar) form.append("avatar", avatar);
       const { data } = await axios.put(
-        `${API_URL}/me/update`,
+        `${API_BASE}/me/update`,
         form,
         config,
       );

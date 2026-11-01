@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
@@ -9,7 +9,7 @@ const UsersList = () => {
   const [editing, setEditing] = useState(null);
   const load = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/admin/users`, config());
+      const { data } = await axios.get(`${API_BASE}/admin/users`, config());
       setUsers(data.users || []);
     } catch (error) {
       errMsg(error);
@@ -21,7 +21,7 @@ const UsersList = () => {
   const save = async (user) => {
     try {
       const { data } = await axios.put(
-        `${API_URL}/admin/user/${user._id}`,
+        `${API_BASE}/admin/user/${user._id}`,
         { name: user.name, email: user.email, role: user.role },
         config(),
       );
@@ -37,7 +37,7 @@ const UsersList = () => {
   const remove = async (id) => {
     if (!window.confirm("Delete this user?")) return;
     try {
-      await axios.delete(`${API_URL}/admin/user/${id}`, config());
+      await axios.delete(`${API_BASE}/admin/user/${id}`, config());
       setUsers((current) => current.filter((user) => user._id !== id));
       successMsg("User deleted");
     } catch (error) {

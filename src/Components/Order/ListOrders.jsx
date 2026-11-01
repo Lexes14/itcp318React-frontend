@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg, getToken, getUser, successMsg } from "../../Utils/helpers.jsx";
 
 const peso = (value) =>
@@ -13,7 +13,7 @@ const ListOrders = () => {
   const load = async () => {
     try {
       const { data } = await axios.get(
-        `${API_URL}/orders/me`,
+        `${API_BASE}/orders/me`,
         { headers: { Authorization: `Bearer ${getToken()}` } },
       );
       setOrders(data.orders || []);
@@ -33,7 +33,7 @@ const ListOrders = () => {
     try {
       const values = review[productId] || {};
       await axios.put(
-        `${API_URL}/review`,
+        `${API_BASE}/review`,
         {
           productId,
           rating: Number(values.rating || 5),

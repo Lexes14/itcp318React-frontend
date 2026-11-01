@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { errMsg } from "../../Utils/helpers.jsx";
 import Loader from "../Layout/Loader.jsx";
 import "./ProductMedia.css";
@@ -17,7 +17,7 @@ const ProductDetails = ({ addItemToCart }) => {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${API_URL}/product/${id}`,
+        `${API_BASE}/product/${id}`,
       );
       setProduct(data.product);
     } catch (error) {

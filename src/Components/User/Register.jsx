@@ -7,7 +7,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import { auth } from "../../firebase.js";
 import { authenticate, errMsg, successMsg } from "../../Utils/helpers.jsx";
 import {
@@ -40,7 +40,7 @@ const Register = () => {
       if (avatar) form.append("avatar", avatar);
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const { data } = await axios.post(
-        `${API_URL}/users/sync`,
+        `${API_BASE}/users/sync`,
         form,
         config,
       );

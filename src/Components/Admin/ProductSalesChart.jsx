@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_URL } from "../../config.js";
+import { API_BASE } from "../../config.js";
 import {
   BarChart,
   Bar,
@@ -14,7 +14,7 @@ const ProductSalesChart = () => {
   const [data, setData] = useState([]);
   useEffect(() => {
     axios
-      .get(`${API_URL}/admin/product-sales`, {
+      .get(`${API_BASE}/admin/product-sales`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       })
       .then(({ data: response }) => setData(response.data || []))
