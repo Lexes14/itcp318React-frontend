@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
 import { API_BASE } from "../../config.js";
-import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
-import { productSchema, validate } from "../../Utils/validation.js";
+import { authConfig, errMsg, successMsg } from "../../Utils/helpers.jsx";
+import { productSchema } from "../../Utils/validation.js";
 
 const categories = [
   "Line-Interactive UPS",
@@ -28,54 +30,73 @@ const initial = {
   sku: "",
   category: categories[0],
 };
+const validImages = (files) =>
+  files.length <= 10 &&
+  files.every(
+    (file) =>
+      ["image/jpeg", "image/png", "image/webp"].includes(file.type) &&
+      file.size <= 5 * 1024 * 1024,
+  );
 
 const NewProduct = ({ onSaved, onCancel }) => {
-  const [form, setForm] = useState(initial);
   const [images, setImages] = useState([]);
   const [saving, setSaving] = useState(false);
-  const change = (event) =>
-    setForm((current) => ({
-      ...current,
-      [event.target.name]: event.target.value,
-    }));
-  const submit = async (event) => {
-    event.preventDefault();
-    const validationError = await validate(productSchema, {
-      ...form,
-      price: Number(form.price),
-      stock: Number(form.stock),
-    });
-    if (validationError) {
-      errMsg({ message: validationError });
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    reset,
+    clearErrors,
+    setError,
+    formState: { errors },
+  } = useForm({ resolver: yupResolver(productSchema), defaultValues: initial });
+
+  const submit = async (form) => {
     setSaving(true);
     try {
       const body = new FormData();
       Object.entries(form).forEach(([key, value]) => body.append(key, value));
-      Array.from(images).forEach((image) => body.append("images", image));
+      images.forEach((image) => body.append("images", image));
       await axios.post(`${API_BASE}/admin/product/new`, body, {
-        headers: { ...{ Authorization: `Bearer ${getToken()}` } },
+        ...authConfig(),
+        withCredentials: true,
       });
       successMsg("Product created");
-      setForm(initial);
+      reset(initial);
       setImages([]);
       onSaved();
     } catch (error) {
+      Object.entries(error.response?.data?.errors || {}).forEach(
+        ([field, message]) => setError(field, { type: "server", message }),
+      );
       errMsg(error);
     } finally {
       setSaving(false);
     }
   };
+  const imageChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!validImages(files)) {
+      setError("images", {
+        type: "validate",
+        message:
+          "Select up to 10 JPEG, PNG, or WebP images, each 5 MB or smaller",
+      });
+      setImages([]);
+      return;
+    }
+    clearErrors("images");
+    setImages(files);
+  };
+
   return (
     <section className="admin-panel">
       <div className="admin-panel-head">
         <h2>New product</h2>
-        <button className="admin-button secondary" onClick={onCancel}>
+        <button type="button" className="admin-button secondary" onClick={onCancel}>
           Cancel
         </button>
       </div>
-      <form className="admin-form" onSubmit={submit}>
+      <form className="admin-form" onSubmit={handleSubmit(submit)}>
         <div className="form-grid">
           {[
             ["name", "Name"],
@@ -90,55 +111,34 @@ const NewProduct = ({ onSaved, onCancel }) => {
             <label key={name}>
               {label}
               <input
-                name={name}
-                value={form[name]}
-                onChange={change}
-                type={
-                  ["price", "salePrice", "stock"].includes(name)
-                    ? "number"
-                    : "text"
-                }
-                required={[
-                  "name",
-                  "slug",
-                  "brand",
-                  "sku",
-                  "price",
-                  "stock",
-                ].includes(name)}
+                {...register(name)}
+                type={["price", "salePrice", "stock"].includes(name) ? "number" : "text"}
               />
+              {errors[name] && <small role="alert">{errors[name].message}</small>}
             </label>
           ))}
           <label>
             Category
-            <select name="category" value={form.category} onChange={change}>
+            <select {...register("category")}>
               {categories.map((category) => (
                 <option key={category}>{category}</option>
               ))}
             </select>
+            {errors.category && <small role="alert">{errors.category.message}</small>}
           </label>
           <label>
             Images
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(event) => setImages(event.target.files)}
-            />
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={imageChange} />
+            {errors.images && <small role="alert">{errors.images.message}</small>}
           </label>
         </div>
         {images.length > 0 && (
           <div className="image-manager">
             <strong>Selected images</strong>
-            <p className="muted">
-              {images.length} image(s) will be uploaded to Cloudinary.
-            </p>
+            <p className="muted">{images.length} image(s) will be uploaded to Cloudinary.</p>
             <div className="image-manager-grid">
-              {Array.from(images).map((image) => (
-                <div
-                  className="managed-image"
-                  key={`${image.name}-${image.lastModified}`}
-                >
+              {images.map((image) => (
+                <div className="managed-image" key={`${image.name}-${image.lastModified}`}>
                   <img src={URL.createObjectURL(image)} alt={image.name} />
                 </div>
               ))}
@@ -147,13 +147,8 @@ const NewProduct = ({ onSaved, onCancel }) => {
         )}
         <label>
           Description
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={change}
-            required
-            rows="4"
-          />
+          <textarea {...register("description")} rows="4" />
+          {errors.description && <small role="alert">{errors.description.message}</small>}
         </label>
         <button className="admin-button" disabled={saving}>
           {saving ? "Saving..." : "Create product"}

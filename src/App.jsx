@@ -17,8 +17,17 @@ import ForgotPassword from "./Components/User/ForgotPassword.jsx";
 import Profile from "./Components/User/Profile.jsx";
 import UpdatePassword from "./Components/User/UpdatePassword.jsx";
 import NewPassword from "./Components/User/NewPassword.jsx";
-import { getUser, logout, successMsg } from "./Utils/helpers.jsx";
-import { logoutSuccess } from "./actions/userActions.jsx";
+import axios from "axios";
+import { API_BASE } from "./config.js";
+import {
+  authenticate,
+  clearUser,
+  errMsg,
+  getUser,
+  logout,
+  successMsg,
+} from "./Utils/helpers.jsx";
+import { loginSuccess, logoutSuccess } from "./actions/userActions.jsx";
 import Loader from "./Components/Layout/Loader.jsx";
 import {
   addToCart,
@@ -33,11 +42,28 @@ const Dashboard = lazy(() => import("./Components/Admin/Dashboard.jsx"));
 
 const App = () => {
   const { cartItems, shippingInfo } = useSelector((state) => state.cart);
+  const reduxUser = useSelector((state) => state.user.user);
   const [darkMode, setDarkMode] = useState(
     () => localStorage.getItem("darkMode") === "true",
   );
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  useEffect(() => {
+    axios
+      .get(`${API_BASE}/me`, { withCredentials: true })
+      .then(({ data }) => {
+        authenticate({ user: data.user });
+        dispatch(loginSuccess(data.user));
+      })
+      .catch((error) => {
+        if (error.response?.status === 401) {
+          clearUser();
+          dispatch(logoutSuccess());
+        } else if (error.response?.status) {
+          errMsg(error);
+        }
+      });
+  }, [dispatch]);
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
@@ -60,16 +86,24 @@ const App = () => {
   const clearCart = () => dispatch(clearCartAction());
   const setShippingInfo = (info) => dispatch(saveShippingInfo(info));
   const signOut = async () => {
-    await logout();
-    dispatch(logoutSuccess());
-    dispatch(clearCartAction());
-    dispatch(clearShippingInfo());
-    localStorage.removeItem("cartItems");
-    localStorage.removeItem("shippingInfo");
-    navigate("/");
-    successMsg("Signed out");
+    try {
+      await logout();
+      dispatch(logoutSuccess());
+      dispatch(clearCartAction());
+      dispatch(clearShippingInfo());
+      localStorage.removeItem("cartItems");
+      localStorage.removeItem("shippingInfo");
+      navigate("/");
+      successMsg("Signed out");
+    } catch (error) {
+      dispatch(logoutSuccess());
+      dispatch(clearCartAction());
+      dispatch(clearShippingInfo());
+      navigate("/");
+      errMsg(error);
+    }
   };
-  const user = getUser();
+  const user = reduxUser || getUser();
   return (
     <div className="app">
       <header className="topbar">

@@ -42,7 +42,7 @@ const Register = () => {
       const { data } = await axios.post(
         `${API_BASE}/users/sync`,
         form,
-        config,
+        { ...config, withCredentials: true },
       );
       authenticate({ token, user: data.user });
       dispatch(registerSuccess(data.user));
