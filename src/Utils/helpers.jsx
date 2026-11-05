@@ -1,19 +1,32 @@
-import axios from "axios";
 import { toast } from "react-toastify";
 import { onIdTokenChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase.js";
 import { getCookie, removeCookie, setCookie } from "./cookies.jsx";
-import { API_BASE } from "../config.js";
 
 const USER_COOKIE = "user";
-let compatibilityToken = null;
+const TOKEN_COOKIE = "userAuthBearer";
+
+const migrateLegacySession = (name) => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const value = window.sessionStorage.getItem(name);
+    if (value) {
+      setCookie(name, value);
+      window.sessionStorage.removeItem(name);
+    }
+    return value;
+  } catch {
+    return null;
+  }
+};
 
 export const authenticate = (data) => {
-  if (data?.token) compatibilityToken = data.token;
+  if (data?.token) setCookie(TOKEN_COOKIE, data.token);
   if (data?.user) setCookie(USER_COOKIE, JSON.stringify(data.user));
 };
 export const getUser = () => {
-  const value = getCookie(USER_COOKIE);
+  const value = getCookie(USER_COOKIE) || migrateLegacySession(USER_COOKIE);
   if (!value || value === "undefined") return null;
 
   try {
@@ -23,28 +36,25 @@ export const getUser = () => {
     return null;
   }
 };
-export const clearUser = () => removeCookie(USER_COOKIE);
-export const getToken = () => compatibilityToken;
-export const authConfig = () => ({
-  withCredentials: true,
-  ...(compatibilityToken
-    ? { headers: { Authorization: `Bearer ${compatibilityToken}` } }
-    : {}),
-});
+export const getToken = () => {
+  return (
+    getCookie(TOKEN_COOKIE) ||
+    migrateLegacySession(TOKEN_COOKIE) ||
+    null
+  );
+};
 export const logout = async () => {
-  let requestError = null;
-  try {
-    await axios.post(`${API_BASE}/auth/logout`, null, {
-      withCredentials: true,
-    });
-  } catch (error) {
-    requestError = error;
-  } finally {
-    compatibilityToken = null;
-    removeCookie(USER_COOKIE);
-    await signOut(auth);
+  removeCookie(TOKEN_COOKIE);
+  removeCookie(USER_COOKIE);
+  if (typeof window !== "undefined") {
+    try {
+      window.sessionStorage.removeItem(TOKEN_COOKIE);
+      window.sessionStorage.removeItem(USER_COOKIE);
+    } catch {
+      // Cookie removal is sufficient when session storage is unavailable.
+    }
   }
-  if (requestError) throw requestError;
+  await signOut(auth);
 };
 const firebaseMessages = {
   "auth/email-already-in-use":
@@ -75,7 +85,7 @@ if (typeof window !== "undefined")
   onIdTokenChanged(auth, async (user) => {
     if (user) {
       const token = await user.getIdToken();
-      compatibilityToken = token;
+      setCookie(TOKEN_COOKIE, token);
       if (!getCookie(USER_COOKIE))
         setCookie(
           USER_COOKIE,
@@ -86,7 +96,7 @@ if (typeof window !== "undefined")
           }),
         );
     } else {
-      compatibilityToken = null;
+      removeCookie(TOKEN_COOKIE);
       removeCookie(USER_COOKIE);
     }
   });

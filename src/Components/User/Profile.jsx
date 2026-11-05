@@ -1,19 +1,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
 import { API_BASE } from "../../config.js";
-import {
-  authConfig,
-  authenticate,
-  errMsg,
-  getUser,
-  successMsg,
-} from "../../Utils/helpers.jsx";
+import { errMsg, getToken, successMsg } from "../../Utils/helpers.jsx";
 import "./Profile.css";
-import { profileSchema } from "../../Utils/validation.js";
+import { profileSchema, validate } from "../../Utils/validation.js";
 import {
   updateProfileSuccess,
   userFail,
@@ -22,82 +14,58 @@ import {
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [name, setName] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [preview, setPreview] = useState("");
   const [saving, setSaving] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    reset,
-    clearErrors,
-    setError,
-    formState: { errors },
-  } = useForm({ resolver: yupResolver(profileSchema) });
   const dispatch = useDispatch();
-
+  const config = { headers: { Authorization: `Bearer ${getToken()}` } };
   useEffect(() => {
     axios
-      .get(`${API_BASE}/me`, { ...authConfig(), withCredentials: true })
+      .get(`${API_BASE}/me`, config)
       .then(({ data }) => {
         setUser(data.user);
-        authenticate({ user: data.user });
-        reset({ name: data.user.name || "" });
+        setName(data.user.name || "");
         setPreview(data.user.avatar?.url || "");
       })
       .catch(errMsg);
-  }, [reset]);
-
+  }, []);
   const selectAvatar = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("avatar", {
-        type: "validate",
-        message: "Avatar must be a JPEG, PNG, or WebP image",
-      });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("avatar", {
-        type: "validate",
-        message: "Avatar must be 5 MB or smaller",
-      });
-      return;
-    }
-    clearErrors("avatar");
     setAvatar(file);
     setPreview(URL.createObjectURL(file));
   };
-
-  const submit = async ({ name }) => {
+  const submit = async (event) => {
+    event.preventDefault();
+    const validationError = await validate(profileSchema, { name });
+    if (validationError) {
+      errMsg({ message: validationError });
+      return;
+    }
     setSaving(true);
     dispatch(userRequest());
     try {
       const form = new FormData();
-      form.append("name", name.trim());
+      form.append("name", name);
       if (avatar) form.append("avatar", avatar);
-      const { data } = await axios.put(`${API_BASE}/me/update`, form, {
-        ...authConfig(),
-        withCredentials: true,
-      });
+      const { data } = await axios.put(
+        `${API_BASE}/me/update`,
+        form,
+        config,
+      );
       setUser(data.user);
       dispatch(updateProfileSuccess(data.user));
       setPreview(data.user.avatar?.url || "");
       successMsg("Profile updated");
     } catch (error) {
       dispatch(userFail(error?.message || "Unable to update profile"));
-      Object.entries(error.response?.data?.errors || {}).forEach(
-        ([field, message]) => {
-          setError(field, { type: "server", message });
-        },
-      );
       errMsg(error);
     } finally {
       setSaving(false);
     }
   };
-
-  if (!user && !getUser()) return <Navigate to="/login" replace />;
+  if (!getToken()) return <Navigate to="/login" replace />;
   if (!user)
     return (
       <main className="container">
@@ -117,11 +85,14 @@ const Profile = () => {
               <span>{user.name?.slice(0, 1).toUpperCase()}</span>
             )}
           </div>
-          <form className="admin-form" onSubmit={handleSubmit(submit)}>
+          <form className="admin-form" onSubmit={submit}>
             <label>
               Full name
-              <input {...register("name")} />
-              {errors.name && <small role="alert">{errors.name.message}</small>}
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+              />
             </label>
             <label>
               Email
@@ -138,9 +109,6 @@ const Profile = () => {
                 accept="image/jpeg,image/png,image/webp"
                 onChange={selectAvatar}
               />
-              {errors.avatar && (
-                <small role="alert">{errors.avatar.message}</small>
-              )}
             </label>
             <button className="add" disabled={saving}>
               {saving ? "Saving..." : "Save profile"}

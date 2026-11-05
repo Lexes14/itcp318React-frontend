@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
@@ -12,7 +10,7 @@ import axios from "axios";
 import { API_BASE } from "../../config.js";
 import { auth } from "../../firebase.js";
 import { authenticate, errMsg, successMsg } from "../../Utils/helpers.jsx";
-import { loginSchema } from "../../Utils/validation.js";
+import { loginSchema, validate } from "../../Utils/validation.js";
 import {
   loginSuccess,
   userFail,
@@ -20,12 +18,9 @@ import {
 } from "../../actions/userActions.jsx";
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting: loading },
-  } = useForm({ resolver: yupResolver(loginSchema) });
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const finishLogin = async (credential) => {
@@ -37,14 +32,21 @@ const Login = () => {
         name:
           credential.user.displayName || credential.user.email.split("@")[0],
       },
-      { ...config, withCredentials: true },
+      config,
     );
     authenticate({ token, user: data.user });
     dispatch(loginSuccess(data.user));
     successMsg("Signed in");
     navigate(data.user.role === "admin" ? "/dashboard" : "/");
   };
-  const submit = async ({ email, password }) => {
+  const submit = async (event) => {
+    event.preventDefault();
+    const validationError = await validate(loginSchema, { email, password });
+    if (validationError) {
+      errMsg({ message: validationError });
+      return;
+    }
+    setLoading(true);
     dispatch(userRequest());
     try {
       await finishLogin(
@@ -53,23 +55,25 @@ const Login = () => {
     } catch (error) {
       dispatch(userFail(error?.message || "Unable to sign in"));
       errMsg(error);
+    } finally {
+      setLoading(false);
     }
   };
   const googleLogin = async () => {
-    setGoogleLoading(true);
+    setLoading(true);
     try {
       await finishLogin(await signInWithPopup(auth, new GoogleAuthProvider()));
     } catch (error) {
       errMsg(error);
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   };
   return (
     <main className="container">
       <form
         className="filter-panel"
-        onSubmit={handleSubmit(submit)}
+        onSubmit={submit}
         style={{ maxWidth: 520, margin: "20px auto" }}
       >
         <div className="eyebrow">Firebase Authentication</div>
@@ -78,19 +82,19 @@ const Login = () => {
           Email
           <input
             type="email"
-            {...register("email")}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
           />
-          {errors.email && <small role="alert">{errors.email.message}</small>}
         </label>
         <label>
           Password
           <input
             type="password"
-            {...register("password")}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
           />
-          {errors.password && (
-            <small role="alert">{errors.password.message}</small>
-          )}
         </label>
         <button className="add" disabled={loading}>
           {loading ? "Signing in..." : "Sign in"}
@@ -99,7 +103,7 @@ const Login = () => {
           type="button"
           className="category active"
           style={{ width: "100%", textAlign: "center", marginTop: 10 }}
-          disabled={loading || googleLoading}
+          disabled={loading}
           onClick={googleLogin}
         >
           Continue with Google

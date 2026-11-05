@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { API_BASE } from "../../config.js";
-import { errMsg, getToken, getUser } from "../../Utils/helpers.jsx";
+import { errMsg, getToken } from "../../Utils/helpers.jsx";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -15,7 +15,7 @@ const OrderDetails = () => {
       .then(({ data }) => setOrder(data.order))
       .catch(errMsg);
   }, [id]);
-  if (!getUser()) return <Navigate to="/login" replace />;
+  if (!getToken()) return <Navigate to="/login" replace />;
   if (!order)
     return (
       <main className="container">
