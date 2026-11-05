@@ -1,31 +1,59 @@
 import { toast } from "react-toastify";
 import { onIdTokenChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase.js";
-export const authenticate = (data) => {
-  if (typeof window !== "undefined") {
-    if (data?.token) sessionStorage.setItem("userAuthBearer", data.token);
-    if (data?.user) sessionStorage.setItem("user", JSON.stringify(data.user));
+import { getCookie, removeCookie, setCookie } from "./cookies.jsx";
+
+const USER_COOKIE = "user";
+const TOKEN_COOKIE = "userAuthBearer";
+
+const migrateLegacySession = (name) => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const value = window.sessionStorage.getItem(name);
+    if (value) {
+      setCookie(name, value);
+      window.sessionStorage.removeItem(name);
+    }
+    return value;
+  } catch {
+    return null;
   }
 };
+
+export const authenticate = (data) => {
+  if (data?.token) setCookie(TOKEN_COOKIE, data.token);
+  if (data?.user) setCookie(USER_COOKIE, JSON.stringify(data.user));
+};
 export const getUser = () => {
-  if (typeof window === "undefined") return null;
+  const value = getCookie(USER_COOKIE) || migrateLegacySession(USER_COOKIE);
+  if (!value || value === "undefined") return null;
+
   try {
-    const value = sessionStorage.getItem("user");
-    if (!value || value === "undefined") return null;
     return JSON.parse(value);
   } catch {
-    sessionStorage.removeItem("user");
+    removeCookie(USER_COOKIE);
     return null;
   }
 };
 export const getToken = () => {
-  if (typeof window !== "undefined")
-    return sessionStorage.getItem("userAuthBearer");
-  return null;
+  return (
+    getCookie(TOKEN_COOKIE) ||
+    migrateLegacySession(TOKEN_COOKIE) ||
+    null
+  );
 };
 export const logout = async () => {
-  sessionStorage.removeItem("userAuthBearer");
-  sessionStorage.removeItem("user");
+  removeCookie(TOKEN_COOKIE);
+  removeCookie(USER_COOKIE);
+  if (typeof window !== "undefined") {
+    try {
+      window.sessionStorage.removeItem(TOKEN_COOKIE);
+      window.sessionStorage.removeItem(USER_COOKIE);
+    } catch {
+      // Cookie removal is sufficient when session storage is unavailable.
+    }
+  }
   await signOut(auth);
 };
 const firebaseMessages = {
@@ -57,10 +85,10 @@ if (typeof window !== "undefined")
   onIdTokenChanged(auth, async (user) => {
     if (user) {
       const token = await user.getIdToken();
-      sessionStorage.setItem("userAuthBearer", token);
-      if (!sessionStorage.getItem("user"))
-        sessionStorage.setItem(
-          "user",
+      setCookie(TOKEN_COOKIE, token);
+      if (!getCookie(USER_COOKIE))
+        setCookie(
+          USER_COOKIE,
           JSON.stringify({
             name: user.displayName || user.email?.split("@")[0],
             email: user.email,
@@ -68,7 +96,7 @@ if (typeof window !== "undefined")
           }),
         );
     } else {
-      sessionStorage.removeItem("userAuthBearer");
-      sessionStorage.removeItem("user");
+      removeCookie(TOKEN_COOKIE);
+      removeCookie(USER_COOKIE);
     }
   });
