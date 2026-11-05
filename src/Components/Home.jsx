@@ -108,6 +108,7 @@ const Home = ({ addItemToCart }) => {
   }, [keyword, category, batteryType, rating, maxPrice]);
   useEffect(() => {
     const onScroll = () => {
+      //infinite scroll trigger when user scrolls to bottom of page
       if (
         window.innerHeight + window.scrollY >=
           document.documentElement.scrollHeight - 500 &&
